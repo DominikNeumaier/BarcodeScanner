@@ -5,6 +5,21 @@
 </ion-header>
 
 <ion-content>
+
+  <ion-list>
+    <ion-item *ngFor="let barcode of barcodes" (click)="openActionSheet(barcode)">
+      <ion-icon slot="end" name="ellipsis-horizontal"></ion-icon>
+      <ion-label position="stacked">{{ barcode.format }}</ion-label>
+      <ion-label position="stacked" type="text">Wert: {{ barcode.displayValue }}</ion-label>
+      <ion-label position="stacked" type="text">Format: {{ barcode.format }} </ion-label>
+      <ion-label position="stacked" type="text">Typ: {{ barcode.valueType }}</ion-label>
+      <ion-label position="stacked" type="text">_</ion-label> <!-- Kommentar -->
+    </ion-item>
+  </ion-list>
+
+
+
+  <!--
   <ion-list>
     <ion-item *ngFor="let barcode of barcodes">
       <ion-label position="stacked">{{ barcode.format }}</ion-label>
@@ -13,9 +28,13 @@
       <ion-input type="text" [value]="barcode.valueType"></ion-input>
     </ion-item>
   </ion-list>
+  -->
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
     <ion-fab-button (click)="scan()" [disabled]="!isSupported">
       <ion-icon name="scan"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-button (click)="pickImage()" [disabled]="!isSupported">
+      <ion-icon name="Test"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>

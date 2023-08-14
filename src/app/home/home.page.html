@@ -9,6 +9,8 @@
     <ion-item *ngFor="let barcode of barcodes">
       <ion-label position="stacked">{{ barcode.format }}</ion-label>
       <ion-input type="text" [value]="barcode.rawValue"></ion-input>
+      <ion-input type="text" [value]="barcode.displayValue"></ion-input>
+      <ion-input type="text" [value]="barcode.valueType"></ion-input>
     </ion-item>
   </ion-list>
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">

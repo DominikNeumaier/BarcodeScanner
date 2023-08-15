@@ -46,14 +46,12 @@ export class HomePage implements OnInit {
       path: pickedImage.path!,
     });
 
-    console.log("Test");
-    console.log(barcodes.length);
 
     if(barcodes.length == 0){
       const alert = await this.alertController.create({
         header: 'QR-Code Nix gut diese',
         message: 'Mies. Du Noob. Nix QR-Code. Mach neu',
-        buttons: ['Vallah Kriese'],
+        buttons: ['Wallah Kriese'],
       });
       await alert.present();
     } else {
@@ -71,9 +69,6 @@ export class HomePage implements OnInit {
     }
     const { barcodes } = await BarcodeScanner.scan();
     this.barcodes.push(...barcodes);
-    console.error("Erwin,Domi, Fabi");
-    console.error(barcodes.length);
-
   }
 
   async requestPermissions(): Promise<boolean> {
@@ -90,14 +85,27 @@ export class HomePage implements OnInit {
     await alert.present();
   }
 
-
-  async openActionSheet(option: any) {
+  async openActionSheet(barcode: any) {
     const actionSheet = await this.actionSheetController.create({
       header: 'Options',
       buttons: [
         {
-          text: option.text,
-          handler: option.handler
+          text: "Share",
+          handler: async() => {
+            await Share.share({text: barcode.displayValue});
+          }
+        },
+        {
+          text: "Copy",
+          handler: async() => {
+            await Clipboard.write({string: barcode.displayValue});
+            }
+        },
+        {
+          text: "Delete",
+          handler: async() => {
+            this.barcodes = this.barcodes.filter(obj => obj !== barcode);
+            }
         },
         {
           text: 'Cancel',
@@ -109,7 +117,8 @@ export class HomePage implements OnInit {
     await actionSheet.present();
   }
 
-  handleOptionClick(optionText: string) {
-    console.log(optionText + ' clicked');
-  }
 }
+
+
+
+

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Barcode, BarcodeFormat, BarcodeScanner, ReadBarcodesFromImageOptions } from '@capacitor-mlkit/barcode-scanning';
+import { Barcode, BarcodeFormat, BarcodeScanner, ReadBarcodesFromImageOptions, BarcodeValueType} from '@capacitor-mlkit/barcode-scanning';
 import { AlertController, ActionSheetController } from '@ionic/angular';
 import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
-
+import { Browser } from '@capacitor/browser';
+import { AppLauncher} from '@capacitor/app-launcher';
 
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
@@ -86,32 +87,59 @@ export class HomePage implements OnInit {
   }
 
   async openActionSheet(barcode: any) {
+    let buttons : Array<any> = [
+                           {
+                             text: "Share",
+                             handler: async() => {
+                               await Share.share({text: barcode.displayValue});
+                             }
+                           },
+                           {
+                             text: "Copy",
+                             handler: async() => {
+                               await Clipboard.write({string: barcode.displayValue});
+                               }
+                           },
+                           {
+                             text: "Delete",
+                             handler: async() => {
+                               this.barcodes = this.barcodes.filter(obj => obj !== barcode);
+                               }
+                           },
+                           {
+                             text: 'Cancel',
+                             role: 'cancel'
+                           }];
+
+    if (barcode.valueType == BarcodeValueType.Url){
+      buttons.unshift({
+        text: "Open in Browser",
+        handler: async() => {
+          this.barcodes = this.barcodes.filter(obj => obj !== barcode);
+          Browser.open({url: barcode.displayValue});
+        }
+      });
+    }
+
+    if (barcode.valueType == BarcodeValueType.Phone){
+      buttons.unshift({
+        text: "Open in Contacts",
+        handler: async() => {
+          let number = barcode.displayValue;
+          let uri = `tel:${number}`;
+
+          let options = {
+            url: uri
+          };
+          await AppLauncher.openUrl(options);
+        }
+      });
+    }
+
+
     const actionSheet = await this.actionSheetController.create({
       header: 'Options',
-      buttons: [
-        {
-          text: "Share",
-          handler: async() => {
-            await Share.share({text: barcode.displayValue});
-          }
-        },
-        {
-          text: "Copy",
-          handler: async() => {
-            await Clipboard.write({string: barcode.displayValue});
-            }
-        },
-        {
-          text: "Delete",
-          handler: async() => {
-            this.barcodes = this.barcodes.filter(obj => obj !== barcode);
-            }
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        }
-      ]
+      buttons: buttons
     });
 
     await actionSheet.present();

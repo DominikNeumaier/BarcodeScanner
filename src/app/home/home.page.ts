@@ -5,7 +5,7 @@ import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { Browser } from '@capacitor/browser';
 import { AppLauncher} from '@capacitor/app-launcher';
-
+import { Preferences } from '@capacitor/preferences';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
 @Component({
@@ -18,12 +18,28 @@ export class HomePage implements OnInit {
   isSupported = false;
   barcodes: Barcode[] = [];
 
-  constructor(private alertController: AlertController, private actionSheetController: ActionSheetController) {}
+  constructor(private alertController: AlertController, private actionSheetController: ActionSheetController) {
+
+  }
+
+  async initialize(){
+    let promise = await Preferences.get({key: 'data'});
+
+    if (promise.value != null){
+      this.barcodes = JSON.parse(promise.value!);
+    }
+  }
+
+  async safeBarcodes(){
+    let value = JSON.stringify(this.barcodes);
+    await Preferences.set({key: "data", value: value});
+  }
 
   ngOnInit() {
     BarcodeScanner.isSupported().then((result) => {
       this.isSupported = result.supported;
     });
+    this.initialize();
   }
 
   async pickImage(): Promise<void> {
@@ -48,6 +64,7 @@ export class HomePage implements OnInit {
     });
 
 
+
     if(barcodes.length == 0){
       const alert = await this.alertController.create({
         header: 'QR-Code Nix gut diese',
@@ -55,8 +72,11 @@ export class HomePage implements OnInit {
         buttons: ['Wallah Kriese'],
       });
       await alert.present();
+
     } else {
+
       this.barcodes.push(...barcodes);
+      this.safeBarcodes();
     }
 
   }
@@ -70,6 +90,7 @@ export class HomePage implements OnInit {
     }
     const { barcodes } = await BarcodeScanner.scan();
     this.barcodes.push(...barcodes);
+    this.safeBarcodes();
   }
 
   async requestPermissions(): Promise<boolean> {
@@ -104,6 +125,7 @@ export class HomePage implements OnInit {
                              text: "Delete",
                              handler: async() => {
                                this.barcodes = this.barcodes.filter(obj => obj !== barcode);
+                                this.safeBarcodes();
                                }
                            },
                            {
@@ -115,7 +137,6 @@ export class HomePage implements OnInit {
       buttons.unshift({
         text: "Open in Browser",
         handler: async() => {
-          this.barcodes = this.barcodes.filter(obj => obj !== barcode);
           Browser.open({url: barcode.displayValue});
         }
       });
@@ -144,7 +165,6 @@ export class HomePage implements OnInit {
 
     await actionSheet.present();
   }
-
 }
 
 

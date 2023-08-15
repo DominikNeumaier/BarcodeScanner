@@ -8,11 +8,13 @@ import { AppLauncher} from '@capacitor/app-launcher';
 import { Preferences } from '@capacitor/preferences';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
+
 
 export class HomePage implements OnInit {
   isSupported = false;
@@ -22,6 +24,7 @@ export class HomePage implements OnInit {
 
   }
 
+  //Lädt Barcodes von Key-Value-Speicher, falls vorhanden
   async initialize(){
     let promise = await Preferences.get({key: 'data'});
 
@@ -30,11 +33,13 @@ export class HomePage implements OnInit {
     }
   }
 
+  //Speichert Barcodes in Key-Value-Speicher
   async safeBarcodes(){
     let value = JSON.stringify(this.barcodes);
     await Preferences.set({key: "data", value: value});
   }
 
+  //Prüft ob Barcode-Scanner unterstützt wird
   ngOnInit() {
     BarcodeScanner.isSupported().then((result) => {
       this.isSupported = result.supported;
@@ -42,6 +47,7 @@ export class HomePage implements OnInit {
     this.initialize();
   }
 
+  //Funktion um QR-Codes aus der Galerie zu importieren
   async pickImage(): Promise<void> {
 
     const granted = await this.requestPermissions();
@@ -64,11 +70,10 @@ export class HomePage implements OnInit {
     });
 
 
-
     if(barcodes.length == 0){
       const alert = await this.alertController.create({
-        header: 'QR-Code Nix gut diese',
-        message: 'Mies. Du Noob. Nix QR-Code. Mach neu',
+        header: 'QR-Code konnte nicht gelesen werden!',
+        message: 'Bitte importiere den QR-Code erneut.',
         buttons: ['Wallah Kriese'],
       });
       await alert.present();
@@ -81,6 +86,7 @@ export class HomePage implements OnInit {
 
   }
 
+  //Funktion um QR-Codes über die Kamera auszulesen
   async scan(): Promise<void> {
 
     const granted = await this.requestPermissions();
@@ -88,25 +94,29 @@ export class HomePage implements OnInit {
       this.presentAlert();
       return;
     }
+
     const { barcodes } = await BarcodeScanner.scan();
     this.barcodes.push(...barcodes);
     this.safeBarcodes();
   }
 
+  //Prüft, ob Kamera-Berechtigungen vorhanden sind
   async requestPermissions(): Promise<boolean> {
     const { camera } = await BarcodeScanner.requestPermissions();
     return camera === 'granted' || camera === 'limited';
   }
 
+  //Informiert über notwendige Berechtigungen
   async presentAlert(): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Permission denied',
-      message: 'Please grant camera permission to use the barcode scanner.',
+      message: 'Please grant permission to use the barcode scanner.',
       buttons: ['OK'],
     });
     await alert.present();
   }
 
+  //Zeigt Options-Menü für einen Barcode an
   async openActionSheet(barcode: any) {
     let buttons : Array<any> = [
                            {
@@ -119,7 +129,8 @@ export class HomePage implements OnInit {
                              text: "Copy",
                              handler: async() => {
                                await Clipboard.write({string: barcode.displayValue});
-                               }
+                             }
+
                            },
                            {
                              text: "Delete",
@@ -133,6 +144,7 @@ export class HomePage implements OnInit {
                              role: 'cancel'
                            }];
 
+    //Öffnen von Barcodes mit dem Typ URL in In-App-Browser
     if (barcode.valueType == BarcodeValueType.Url){
       buttons.unshift({
         text: "Open in Browser",
@@ -142,6 +154,7 @@ export class HomePage implements OnInit {
       });
     }
 
+    //Öffnen von Barcodes mit dem Typ Phone in Standard-Telefon-App
     if (barcode.valueType == BarcodeValueType.Phone){
       buttons.unshift({
         text: "Open in Contacts",
